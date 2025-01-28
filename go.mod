@@ -1,9 +1,8 @@
-module https://github.com/MentalMentos/techFin
+module github.com/MentalMentos/techFin
 
 go 1.23.5
 
 require (
-	github.com/MentalMentos/techTaskMetr/techTaskmetr v0.0.0-20250123051156-d19887afa463
 	github.com/georgysavva/scany v1.2.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/goccy/go-json v0.10.2
