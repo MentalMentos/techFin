@@ -3,8 +3,8 @@ package transaction
 import (
 	"context"
 	"github.com/MentalMentos/techFin/internal/clients/db"
+	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/MentalMentos/techFin/internal/models"
-	"github.com/redis/go-redis/v9"
 )
 
 type Transaction interface {
@@ -14,5 +14,12 @@ type Transaction interface {
 
 type TransactionRepository struct {
 	db          db.Client
-	redisClient redis.Client
+	redisClient redis.IRedis
+}
+
+func NewTransactionRepository(db db.Client, redisClient redis.IRedis) *TransactionRepository {
+	return &TransactionRepository{
+		db:          db,
+		redisClient: redisClient,
+	}
 }

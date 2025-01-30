@@ -8,7 +8,7 @@ import (
 
 type Balance interface {
 	GetBalance(ctx *gin.Context, userID int) (float64, error)
-	UpdateBalance(ctx *gin.Context, tx db.TxManager, userID int, amount float64) error
+	UpdateBalance(ctx *gin.Context, tx db.TxManager, userID int, amount float64) (float64, error)
 }
 
 type BalanceRepository struct {

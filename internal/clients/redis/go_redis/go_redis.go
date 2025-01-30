@@ -1,10 +1,9 @@
 package go_redis
 
 import (
-	"awesomeProject3/internal/clients/redis"
-	//"awesomeProject3/pkg/logger"
 	"context"
 	"fmt"
+	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/goccy/go-json"
 	goRedis "github.com/redis/go-redis/v9"
 	"time"

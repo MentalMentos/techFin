@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"awesomeProject3/pkg/logger"
 	"fmt"
 	"net"
 	"os"
