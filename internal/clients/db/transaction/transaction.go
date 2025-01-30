@@ -71,3 +71,13 @@ func (m *manager) ReadCommitted(ctx context.Context, f db.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.ReadCommitted}
 	return m.transaction(ctx, txOpts, f)
 }
+
+func (m *manager) RepeatableRead(ctx context.Context, f db.Handler) error {
+	txOpts := pgx.TxOptions{IsoLevel: pgx.RepeatableRead}
+	return m.transaction(ctx, txOpts, f)
+}
+
+func (m *manager) Serializable(ctx context.Context, f db.Handler) error {
+	txOpts := pgx.TxOptions{IsoLevel: pgx.Serializable}
+	return m.transaction(ctx, txOpts, f)
+}

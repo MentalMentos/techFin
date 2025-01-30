@@ -1,14 +1,15 @@
 package balance
 
 import (
+	"context"
 	"github.com/MentalMentos/techFin/internal/clients/db"
 	"github.com/MentalMentos/techFin/internal/clients/redis"
-	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v4"
 )
 
 type Balance interface {
-	GetBalance(ctx *gin.Context, userID int) (float64, error)
-	UpdateBalance(ctx *gin.Context, tx db.TxManager, userID int, amount float64) (float64, error)
+	GetBalance(ctx context.Context, userID int) (float64, error)
+	UpdateBalance(ctx context.Context, tx pgx.Tx, userID int, amount float64) (float64, error)
 }
 
 type BalanceRepository struct {

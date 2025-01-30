@@ -4,46 +4,35 @@ import (
 	"context"
 	"fmt"
 	"github.com/MentalMentos/techFin/internal/clients/db"
-	"github.com/MentalMentos/techFin/internal/clients/db/pg"
 	"github.com/MentalMentos/techFin/internal/models"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 	"time"
 )
 
-func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx db.TxManager, userID int, amount float64, transactionType string, targetUserID *int) error {
-	return tx.ReadCommitted(ctx, func(txctx context.Context) error {
-		tx, ok := txctx.Value(pg.TxKey).(pgx.Tx)
-		if !ok {
-			return errors.New("no transaction found in context")
-		}
+func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, transactionType string, targetUserID *int) error {
+	_, err := tx.Exec(ctx, "INSERT INTO transactions (user_id, amount, transaction_type, target_user_id, status) VALUES ($1, $2, $3, $4, 'completed');",
+		userID, amount, transactionType, targetUserID)
+	if err != nil {
+		tx.Rollback(ctx)
+		return errors.Wrap(err, "failed to insert transaction")
+	}
 
-		// Вставляем транзакцию в базу данных
-		_, err := tx.Exec(txctx, "INSERT INTO transactions (user_id, amount, transaction_type, target_user_id, status) VALUES ($1, $2, $3, $4, 'completed');",
-			userID, amount, transactionType, targetUserID)
-		if err != nil {
-			return errors.Wrap(err, "failed to insert transaction")
-		}
+	transactionKey := fmt.Sprintf("transaction:%d:%d", userID, time.Now().Unix())
+	transactionData := map[string]interface{}{
+		"user_id":          userID,
+		"amount":           amount,
+		"transaction_type": transactionType,
+		"target_user_id":   targetUserID,
+		"status":           "completed",
+	}
 
-		// Кэшируем информацию о транзакции в Redis
-		// Формируем ключ для Redis, например, "transaction:{transaction_id}"
-		transactionKey := fmt.Sprintf("transaction:%d:%d", userID, time.Now().Unix())
-		transactionData := map[string]interface{}{
-			"user_id":          userID,
-			"amount":           amount,
-			"transaction_type": transactionType,
-			"target_user_id":   targetUserID,
-			"status":           "completed",
-		}
+	err = r.redisClient.SetObject(ctx, transactionKey, transactionData, 24*time.Hour)
+	if err != nil {
+		return errors.Wrap(err, "failed to cache transaction in Redis")
+	}
 
-		// Сохраняем транзакцию в Redis с тайм-аутом (например, 1 день)
-		err = r.redisClient.SetObject(ctx, transactionKey, transactionData, 24*time.Hour)
-		if err != nil {
-			return errors.Wrap(err, "failed to cache transaction in Redis")
-		}
-
-		return nil
-	})
+	return nil
 }
 
 func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID int) ([]models.Transaction, error) {
@@ -53,7 +42,6 @@ func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID 
 	var cachedTransactions []models.Transaction
 	err := r.redisClient.GetObject(ctx, cacheKey, &cachedTransactions)
 	if err == nil && len(cachedTransactions) > 0 {
-		// Если транзакции найдены в Redis, возвращаем их
 		return cachedTransactions, nil
 	}
 
@@ -78,7 +66,7 @@ func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID 
 		return nil, errors.Wrap(err, "failed to iterate over transaction rows")
 	}
 
-	err = r.redisClient.SetObject(ctx, cacheKey, transactions, 10*time.Minute) // Например, кэшируем на 10 минут
+	err = r.redisClient.SetObject(ctx, cacheKey, transactions, 15*time.Minute)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to cache last transactions in Redis")
 	}

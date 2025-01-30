@@ -17,6 +17,8 @@ type Client interface {
 
 type TxManager interface {
 	ReadCommitted(ctx context.Context, f Handler) error
+	RepeatableRead(ctx context.Context, f Handler) error
+	Serializable(ctx context.Context, f Handler) error
 }
 
 type Query struct {
