@@ -1,15 +1,14 @@
 package balance
 
 import (
-	"awesomeProject3/internal/clients/db"
-	"awesomeProject3/internal/clients/redis"
-	"awesomeProject3/internal/models"
+	"github.com/MentalMentos/techFin/internal/clients/db"
+	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/gin-gonic/gin"
 )
 
 type Balance interface {
-	CreateBalance(ctx *gin.Context, user models.User) error
-	GetBalance(ctx *gin.Context, user_id int) (models.User, error)
+	GetBalance(ctx *gin.Context, userID int) (float64, error)
+	UpdateBalance(ctx *gin.Context, tx db.TxManager, userID int, amount float64) error
 }
 
 type BalanceRepository struct {

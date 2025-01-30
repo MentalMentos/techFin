@@ -1,8 +1,8 @@
 package pg
 
 import (
-	"awesomeProject3/internal/clients/db"
 	"context"
+	"github.com/MentalMentos/techFin/internal/clients/db"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"

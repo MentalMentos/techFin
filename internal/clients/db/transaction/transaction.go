@@ -1,9 +1,9 @@
 package transaction
 
 import (
-	"awesomeProject3/internal/clients/db"
-	"awesomeProject3/internal/clients/db/pg"
 	"context"
+	"github.com/MentalMentos/techFin/internal/clients/db"
+	"github.com/MentalMentos/techFin/internal/clients/db/pg"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
