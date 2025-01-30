@@ -11,21 +11,6 @@ import (
 	"time"
 )
 
-//func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx db.TxManager, userID int, amount float64, transactionType string, targetUserID *int) error {
-//	return tx.ReadCommitted(ctx, func(txctx context.Context) error {
-//		tx, ok := txctx.Value(pg.TxKey).(pgx.Tx)
-//		if !ok {
-//			return errors.New("no transaction found in context")
-//		}
-//		_, err := tx.Exec(txctx, "INSERT INTO transactions (user_id, amount, transaction_type, target_user_id, status) VALUES ($1, $2, $3, $4, 'completed');",
-//			userID, amount, transactionType, targetUserID)
-//		if err != nil {
-//			return errors.Wrap(err, "failed to update balance")
-//		}
-//		return nil
-//	})
-//}
-
 func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx db.TxManager, userID int, amount float64, transactionType string, targetUserID *int) error {
 	return tx.ReadCommitted(ctx, func(txctx context.Context) error {
 		tx, ok := txctx.Value(pg.TxKey).(pgx.Tx)
@@ -63,6 +48,15 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx db.TxM
 
 func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID int) ([]models.Transaction, error) {
 	var transactions []models.Transaction
+
+	cacheKey := fmt.Sprintf("last_transactions:%d", userID)
+	var cachedTransactions []models.Transaction
+	err := r.redisClient.GetObject(ctx, cacheKey, &cachedTransactions)
+	if err == nil && len(cachedTransactions) > 0 {
+		// Если транзакции найдены в Redis, возвращаем их
+		return cachedTransactions, nil
+	}
+
 	rows, err := r.db.DB().QueryContext(ctx, db.Query{
 		Name:     "get_last_transactions",
 		QueryRaw: "SELECT id, amount, transaction_type, target_user_id, status, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10",
@@ -82,6 +76,11 @@ func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID 
 
 	if err := rows.Err(); err != nil {
 		return nil, errors.Wrap(err, "failed to iterate over transaction rows")
+	}
+
+	err = r.redisClient.SetObject(ctx, cacheKey, transactions, 10*time.Minute) // Например, кэшируем на 10 минут
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to cache last transactions in Redis")
 	}
 
 	return transactions, nil
