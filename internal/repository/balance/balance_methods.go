@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+func (r *BalanceRepository) CreateBalance(ctx context.Context, tx pgx.Tx, userID int) error {
+	_, err := tx.Exec(ctx, "INSERT INTO balances (user_id, balance VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING;", userID, 0)
+	if err != nil {
+		return errors.Wrap(err, "failed to create balance")
+	}
+	return nil
+}
+
 func (r *BalanceRepository) GetBalance(ctx context.Context, userID int) (float64, error) {
 	balanceStr, err := r.redisClient.Get(ctx, fmt.Sprintf("balance:%d", userID))
 	if err == nil {
