@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
@@ -12,6 +13,8 @@ CREATE TABLE transactions (
     status TEXT CHECK (status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+INSERT INTO users (balance) VALUES (0.00), (0.00);
 
 
 
