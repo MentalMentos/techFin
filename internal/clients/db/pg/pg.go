@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
-	"os"
 )
 
 const (
@@ -23,7 +22,7 @@ type pgClient struct {
 }
 
 func New(ctx context.Context) (db.Client, error) {
-	dsn := os.Getenv(dsnEnvName)
+	dsn := "host=localhost port=5432 dbname=postgres user=user password=1234 sslmode=disable"
 	if len(dsn) == 0 {
 		return nil, errors.New("pg dsn not found")
 	}

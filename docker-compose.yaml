@@ -5,6 +5,8 @@ services:
       - POSTGRES_DB=${PG_DATABASE_NAME}
       - POSTGRES_USER=${PG_USER}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     ports:
       - "${PG_PORT}:5432"
     volumes:
@@ -15,35 +17,15 @@ services:
       timeout: 5s
       retries: 5
 
-  migrator:
-    build:
-      context: techFin
-      dockerfile: migration.Dockerfile
-    depends_on:
-      pg:
-        condition: service_healthy
-    environment:
-      PG_DSN: host=pg port=5432 dbname=postgres user=user password=1234 sslmode=disable
-      MIGRATION_DIR: ${MIGRATION_DIR}
-
-  backend:
-    build:
-      context: techFin
-    environment:
-      DB_HOST: pg
-      DB_PORT: 5432
-      DB_NAME: postgres
-      DB_USER: user
-      DB_PASSWORD: password
-    depends_on:
-      - pg
+  redis:
+    image: redis:alpine
     ports:
-      - "0.0.0.0:8080:8080"
-    networks:
-      - app_network
-networks:
-  app_network:
-    driver: bridge
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

@@ -10,11 +10,16 @@ import (
 	"github.com/MentalMentos/techFin/internal/repository"
 	"github.com/MentalMentos/techFin/internal/router"
 	"github.com/MentalMentos/techFin/internal/service"
+	"github.com/joho/godotenv"
 	"log"
 )
 
 func main() {
 	ctx := context.Background()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
 
 	pgClient, err := pg.New(ctx)
 	if err != nil {
@@ -25,7 +30,10 @@ func main() {
 	txManager := transaction.NewTransactionManager(pgClient.DB())
 
 	redisCfg, err := redis.NewRedisConfig()
-	redisClient := go_redis.NewGoRedisClient(redisCfg)
+	if err != nil {
+		log.Fatalf("failed to create Redis config: %v", err)
+	}
+	redisClient, err := go_redis.NewGoRedisClient(redisCfg)
 	if err != nil {
 		log.Fatalf("failed to create Redis client: %v", err)
 	}
