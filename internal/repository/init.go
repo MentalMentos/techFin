@@ -17,7 +17,7 @@ type RepositoryImpl struct {
 	transactionRepo transaction.Transaction
 }
 
-func NewRepository(dbClient db.Client, redisClient redis.IRedis) Repository {
+func NewRepository(dbClient db.Client, redisClient redis.IRedis) *RepositoryImpl {
 	return &RepositoryImpl{
 		balanceRepo:     balance.New(dbClient, redisClient),
 		transactionRepo: transaction.NewTransactionRepository(dbClient, redisClient),

@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )

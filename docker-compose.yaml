@@ -17,7 +17,7 @@ services:
 
   migrator:
     build:
-      context: techTaskmetr
+      context: techFin
       dockerfile: migration.Dockerfile
     depends_on:
       pg:
@@ -28,7 +28,7 @@ services:
 
   backend:
     build:
-      context: techTaskmetr
+      context: techFin
     environment:
       DB_HOST: pg
       DB_PORT: 5432
@@ -38,29 +38,12 @@ services:
     depends_on:
       - pg
     ports:
-      - "0.0.0.0:8882:8882" # Доступ для всех хостов на порту 8882
-      - "0.0.0.0:8881:8881" # Доступ для всех хостов на порту 8881
+      - "0.0.0.0:8080:8080"
     networks:
       - app_network
-
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
-    ports:
-      - "9090:9090"
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-
 networks:
   app_network:
     driver: bridge
 
 volumes:
   postgres_data:
-  grafana_data:

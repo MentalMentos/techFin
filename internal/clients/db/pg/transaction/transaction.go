@@ -2,56 +2,54 @@ package transaction
 
 import (
 	"context"
-	"github.com/MentalMentos/techFin/internal/clients/db"
+	db2 "github.com/MentalMentos/techFin/internal/clients/db"
 	"github.com/MentalMentos/techFin/internal/clients/db/pg"
-
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 )
 
 type manager struct {
-	db db.Transactor
+	db db2.DB
 }
 
-func NewTransactionManager(db db.Transactor) db.TxManager {
+func NewTransactionManager(db db2.DB) db2.TxManager {
 	return &manager{
 		db: db,
 	}
 }
 
-func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db.Handler) (err error) {
-	// Если это вложенная транзакция, пропускаем инициацию новой транзакции и выполняем обработчик.
+func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db2.Handler) (err error) {
+	// Проверка на существующую транзакцию в контексте
 	tx, ok := ctx.Value(pg.TxKey).(pgx.Tx)
 	if ok {
+		// Если транзакция уже существует, выполняем обработчик в текущей транзакции
 		return fn(ctx)
 	}
 
-	// Стартуем новую транзакцию.
+	// Инициализация новой транзакции
 	tx, err = m.db.BeginTx(ctx, opts)
 	if err != nil {
 		return errors.Wrap(err, "can't begin transaction")
 	}
 
-	// Кладем транзакцию в контекст.
+	// Добавляем транзакцию в контекст
 	ctx = pg.MakeContextTx(ctx, tx)
 
-	// Настраиваем функцию отсрочки для отката или коммита транзакции.
+	// Отсроченная функция для управления откатом и коммитом транзакции
 	defer func() {
-		// восстанавливаемся после паники
 		if r := recover(); r != nil {
 			err = errors.Errorf("panic recovered: %v", r)
 		}
 
-		// откатываем транзакцию, если произошла ошибка
+		// Откат транзакции в случае ошибки
 		if err != nil {
 			if errRollback := tx.Rollback(ctx); errRollback != nil {
 				err = errors.Wrapf(err, "errRollback: %v", errRollback)
 			}
-
 			return
 		}
 
-		// если ошибок не было, коммитим транзакцию
+		// Коммит транзакции в случае успеха
 		if nil == err {
 			err = tx.Commit(ctx)
 			if err != nil {
@@ -60,6 +58,7 @@ func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db.Han
 		}
 	}()
 
+	// Выполняем код в транзакции
 	if err = fn(ctx); err != nil {
 		err = errors.Wrap(err, "failed executing code inside transaction")
 	}
@@ -67,17 +66,17 @@ func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db.Han
 	return err
 }
 
-func (m *manager) ReadCommitted(ctx context.Context, f db.Handler) error {
+func (m *manager) ReadCommitted(ctx context.Context, f db2.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.ReadCommitted}
 	return m.transaction(ctx, txOpts, f)
 }
 
-func (m *manager) RepeatableRead(ctx context.Context, f db.Handler) error {
+func (m *manager) RepeatableRead(ctx context.Context, f db2.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.RepeatableRead}
 	return m.transaction(ctx, txOpts, f)
 }
 
-func (m *manager) Serializable(ctx context.Context, f db.Handler) error {
+func (m *manager) Serializable(ctx context.Context, f db2.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.Serializable}
 	return m.transaction(ctx, txOpts, f)
 }
