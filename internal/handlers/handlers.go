@@ -57,7 +57,7 @@ func (h *Handler) UpdateBalanceHandler(c *gin.Context) {
 		return
 	}
 
-	updatedBalance, err := h.service.UpdateBalance(c, req.UserID, req.Amount)
+	updatedBalance, err := h.service.UpdateBalance(c.Request.Context(), req.UserID, req.Amount)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.StandardResponse{
 			Status:  "error",
@@ -84,7 +84,7 @@ func (h *Handler) TransferHandler(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Transfer(c, req.FromUserID, req.ToUserID, req.Amount); err != nil {
+	if err := h.service.Transfer(c.Request.Context(), req.FromUserID, req.ToUserID, req.Amount); err != nil {
 		c.JSON(http.StatusInternalServerError, response.StandardResponse{
 			Status:  "error",
 			Message: err.Error(),

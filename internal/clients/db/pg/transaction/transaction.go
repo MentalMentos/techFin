@@ -2,23 +2,23 @@ package transaction
 
 import (
 	"context"
-	db2 "github.com/MentalMentos/techFin/internal/clients/db"
+	"github.com/MentalMentos/techFin/internal/clients/db"
 	"github.com/MentalMentos/techFin/internal/clients/db/pg"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 )
 
 type manager struct {
-	db db2.DB
+	db db.DB
 }
 
-func NewTransactionManager(db db2.DB) db2.TxManager {
+func NewTransactionManager(db db.DB) db.TxManager {
 	return &manager{
 		db: db,
 	}
 }
 
-func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db2.Handler) (err error) {
+func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db.Handler) (err error) {
 	// Проверка на существующую транзакцию в контексте
 	tx, ok := ctx.Value(pg.TxKey).(pgx.Tx)
 	if ok {
@@ -66,17 +66,17 @@ func (m *manager) transaction(ctx context.Context, opts pgx.TxOptions, fn db2.Ha
 	return err
 }
 
-func (m *manager) ReadCommitted(ctx context.Context, f db2.Handler) error {
+func (m *manager) ReadCommitted(ctx context.Context, f db.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.ReadCommitted}
 	return m.transaction(ctx, txOpts, f)
 }
 
-func (m *manager) RepeatableRead(ctx context.Context, f db2.Handler) error {
+func (m *manager) RepeatableRead(ctx context.Context, f db.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.RepeatableRead}
 	return m.transaction(ctx, txOpts, f)
 }
 
-func (m *manager) Serializable(ctx context.Context, f db2.Handler) error {
+func (m *manager) Serializable(ctx context.Context, f db.Handler) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.Serializable}
 	return m.transaction(ctx, txOpts, f)
 }

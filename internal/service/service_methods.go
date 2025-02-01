@@ -7,16 +7,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (s *ServiceImpl) CreateBalance(ctx context.Context, userID int) error {
-	return s.txManager.Serializable(ctx, func(txCtx context.Context) error {
-		tx, ok := txCtx.Value("tx").(pgx.Tx)
-		if !ok {
-			return errors.New("failed to extract transaction from context")
-		}
-		return s.repo.BalanceRepository().CreateBalance(txCtx, tx, userID)
-	})
-}
-
 func (s *ServiceImpl) GetBalance(ctx context.Context, userID int) (float64, error) {
 	balance, err := s.repo.BalanceRepository().GetBalance(ctx, userID)
 	if err != nil {
@@ -28,7 +18,7 @@ func (s *ServiceImpl) GetBalance(ctx context.Context, userID int) (float64, erro
 func (s *ServiceImpl) UpdateBalance(ctx context.Context, userID int, amount float64) (float64, error) {
 	var updatedBalance float64
 
-	err := s.txManager.Serializable(ctx, func(txCtx context.Context) error {
+	err := s.txManager.RepeatableRead(ctx, func(txCtx context.Context) error {
 		tx, ok := txCtx.Value("tx").(pgx.Tx)
 		if !ok {
 			return errors.New("failed to extract transaction from context")
