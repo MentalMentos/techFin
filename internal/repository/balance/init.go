@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/MentalMentos/techFin/internal/clients/db"
 	"github.com/MentalMentos/techFin/internal/clients/redis"
+	"github.com/MentalMentos/techFin/pkg/logger"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -15,11 +16,13 @@ type Balance interface {
 type BalanceRepository struct {
 	db          db.Client
 	redisClient redis.IRedis
+	logger      logger.Logger
 }
 
-func New(db db.Client, redisClient redis.IRedis) *BalanceRepository {
+func New(db db.Client, redisClient redis.IRedis, logger logger.Logger) *BalanceRepository {
 	return &BalanceRepository{
 		db:          db,
 		redisClient: redisClient,
+		logger:      logger,
 	}
 }

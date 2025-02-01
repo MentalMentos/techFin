@@ -1,25 +1,31 @@
 package helpers
 
 const (
-	FailedToCreateElement = "FAILED_TO_CREATE_ELEMENT" // FailedToCreateElement contains error message for failed to create element
-	FailedToDeleteElement = "FAILED_TO_DELETE_ELEMENT" // FailedToDeleteElement contains error message for failed to delete element
-	FailedToGetElements   = "FAILED_TO_GET_ELEMENTS"   // FailedToGetElements contains error message for failed to get elements
-	FailedToUpdateElement = "FAILED_TO_UPDATE_ELEMENT"
+	ServicePrefix             = "[ SERVICE ]"
+	ServiceGetBalanceError    = "FAILED_TO_GET_BALANCE"
+	ServiceUpdateBalanceError = "FAILED_TO_UPDATE_BALANCE"
+	ServiceTransferError      = "FAILED_TO_TRANSFER_FUNDS"
+	ServiceTransactionError   = "FAILED_TO_GET_TRANSACTIONS"
+	ServiceInsufficientFunds  = "INSUFFICIENT_FUNDS"
+	ServiceInvalidAmount      = "INVALID_TRANSFER_AMOUNT"
 
-	JSONParseError        = "JSON_PARSE_ERROR" // JSONParseError contains error message for failed to parse json
-	DefaultValueForFields = "NOT FOUND"        // DefaultValueForFields contains default value for fields
+	RepoPrefix                   = "[ REPO ]"
+	RepoGetBalanceError          = "FAILED_TO_GET_BALANCE_FROM_DB"
+	RepoCacheBalanceError        = "FAILED_TO_CACHE_BALANCE_IN_REDIS"
+	RepoUpdateBalanceError       = "FAILED_TO_UPDATE_BALANCE"
+	RepoFetchBalanceError        = "FAILED_TO_FETCH_UPDATED_BALANCE"
+	RepoRedisParseError          = "FAILED_TO_PARSE_CACHED_BALANCE"
+	RepoCreateTransactionError   = "FAILED_TO_CREATE_TRANSACTION"
+	RepoCacheTransactionError    = "FAILED_TO_CACHE_TRANSACTION"
+	RepoGetTransactionsError     = "FAILED_TO_GET_TRANSACTIONS"
+	RepoScanTransactionError     = "FAILED_TO_SCAN_TRANSACTION"
+	RepoIterateTransactionsError = "FAILED_TO_ITERATE_TRANSACTIONS"
 
-	AppPrefix      = " [ APP ] "      // AppPrefix contains app prefix
-	ResponsePrefix = " [ RESPONSE ] " // ResponsePrefix contains response prefix
-	InfoPrefix     = " INFO "         // InfoPrefix contains info prefix
-	Success        = "SUCCESS"        // Success contains success message
-	RequestError   = "REQUEST_ERROR"  // RequestError contains error message for failed to error
-	StatusPrefix   = " STATUS "       // StatusPrefix contains status prefix
+	HandlerPrefix = "[ HANDL ]"
 
-	UnmarshalError = "UNMARSHAL_ERROR" // UnmarshalError contains error message for unmarshal error
-	ReadBodyError  = "READ_BODY_ERROR" // ReadBodyError contains error message for read body error
+	AppPrefix = " [ APP ] "
 
-	PgPrefix            = " [ POSTGRES ] "                     // PgPrefix contains database prefix for logs
+	PgPrefix            = " [ POSTGRES ] "
 	ReconnectDB         = "RECONNECTING TO DATABASE..."        // ReconnectDB contains reconnect db message
 	DisconnectDB        = "DISCONNECTED FROM DATABASE"         // DisconnectDB contains disconnect db message
 	PgConnectFailed     = "FAILED TO CONNECT TO DATABASE"      // PgConnectFailed contains error message for failed to connect to database

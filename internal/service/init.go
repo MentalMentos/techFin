@@ -5,6 +5,7 @@ import (
 	"github.com/MentalMentos/techFin/internal/clients/db"
 	"github.com/MentalMentos/techFin/internal/models"
 	"github.com/MentalMentos/techFin/internal/repository"
+	"github.com/MentalMentos/techFin/pkg/logger"
 )
 
 type Service interface {
@@ -17,11 +18,13 @@ type Service interface {
 type ServiceImpl struct {
 	repo      *repository.RepositoryImpl
 	txManager db.TxManager
+	logger    logger.Logger
 }
 
-func NewService(repo *repository.RepositoryImpl, tx db.TxManager) *ServiceImpl {
+func NewService(repo *repository.RepositoryImpl, tx db.TxManager, logger logger.Logger) *ServiceImpl {
 	return &ServiceImpl{
 		repo:      repo,
 		txManager: tx,
+		logger:    logger,
 	}
 }
