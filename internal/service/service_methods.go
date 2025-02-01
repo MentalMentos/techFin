@@ -5,6 +5,7 @@ import (
 	"github.com/MentalMentos/techFin/internal/models"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
+	"log"
 )
 
 func (s *ServiceImpl) GetBalance(ctx context.Context, userID int) (float64, error) {
@@ -18,12 +19,7 @@ func (s *ServiceImpl) GetBalance(ctx context.Context, userID int) (float64, erro
 func (s *ServiceImpl) UpdateBalance(ctx context.Context, userID int, amount float64) (float64, error) {
 	var updatedBalance float64
 
-	err := s.txManager.RepeatableRead(ctx, func(txCtx context.Context) error {
-		tx, ok := txCtx.Value("tx").(pgx.Tx)
-		if !ok {
-			return errors.New("failed to extract transaction from context")
-		}
-
+	err := s.txManager.RepeatableRead(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var err error
 		updatedBalance, err = s.repo.BalanceRepository().UpdateBalance(txCtx, tx, userID, amount)
 		if err != nil {
@@ -31,6 +27,7 @@ func (s *ServiceImpl) UpdateBalance(ctx context.Context, userID int, amount floa
 		}
 		return nil
 	})
+
 	if err != nil {
 		return 0, err
 	}
@@ -42,15 +39,12 @@ func (s *ServiceImpl) Transfer(ctx context.Context, fromUserID, toUserID int, am
 	if err != nil {
 		return errors.Wrap(err, "failed to get balance")
 	}
+	log.Printf("Balance of user %d: %.2f, Transfer amount: %.2f", fromUserID, balanceFromUser, amount) // <--- Логируем баланс
 	if amount <= 0 || balanceFromUser < amount {
 		return errors.New("amount must be positive")
 	}
 
-	return s.txManager.Serializable(ctx, func(txCtx context.Context) error {
-		tx, ok := txCtx.Value("tx").(pgx.Tx)
-		if !ok {
-			return errors.New("failed to extract transaction from context")
-		}
+	return s.txManager.Serializable(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		newBalanceFromUser, err := s.repo.BalanceRepository().UpdateBalance(txCtx, tx, fromUserID, -amount)
 		if err != nil {
 			return err
@@ -77,7 +71,7 @@ func (s *ServiceImpl) Transfer(ctx context.Context, fromUserID, toUserID int, am
 
 func (s *ServiceImpl) GetLastTransactions(ctx context.Context, userID int) ([]models.Transaction, error) {
 	var transactions []models.Transaction
-	err := s.txManager.ReadCommitted(ctx, func(txCtx context.Context) error {
+	err := s.txManager.ReadCommitted(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var err error
 		// Передаем транзакцию в репозиторий для чтения
 		transactions, err = s.repo.TransactionRepository().GetLastTransactions(txCtx, userID)

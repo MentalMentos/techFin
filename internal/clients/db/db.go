@@ -6,8 +6,11 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-// Handler - функция, которая выполняется в транзакции
+// Handler - функция без доступа к транзакции (оставляем для обычных операций)
 type Handler func(ctx context.Context) error
+
+// TxHandler - функция, выполняемая внутри транзакции
+type TxHandler func(ctx context.Context, tx pgx.Tx) error
 
 type Client interface {
 	DB() DB
@@ -15,9 +18,9 @@ type Client interface {
 }
 
 type TxManager interface {
-	ReadCommitted(ctx context.Context, f Handler) error
-	RepeatableRead(ctx context.Context, f Handler) error
-	Serializable(ctx context.Context, f Handler) error
+	ReadCommitted(ctx context.Context, f TxHandler) error
+	RepeatableRead(ctx context.Context, f TxHandler) error
+	Serializable(ctx context.Context, f TxHandler) error
 }
 
 type Query struct {

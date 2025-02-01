@@ -55,7 +55,7 @@ func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID 
 
 	for rows.Next() {
 		var t models.Transaction
-		if err := rows.Scan(&t.ID, &t.Amount, &t.Type, &t.TargetUserID, &t.Status, &t.CreatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.Amount, &t.TargetUserID, &t.Status, &t.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan transaction")
 		}
 		transactions = append(transactions, t)
