@@ -64,10 +64,10 @@ func (s *ServiceImpl) Transfer(ctx context.Context, fromUserID, toUserID int, am
 			return err
 		}
 		// Логируем операции перевода
-		if err := s.repo.TransactionRepository().CreateTransaction(txCtx, tx, fromUserID, -amount, "transfer", &toUserID); err != nil {
+		if err := s.repo.TransactionRepository().CreateTransaction(txCtx, tx, fromUserID, -amount, &toUserID); err != nil {
 			return err
 		}
-		if err := s.repo.TransactionRepository().CreateTransaction(txCtx, tx, toUserID, amount, "receive", &fromUserID); err != nil {
+		if err := s.repo.TransactionRepository().CreateTransaction(txCtx, tx, toUserID, amount, &fromUserID); err != nil {
 			return err
 		}
 

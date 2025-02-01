@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, transactionType string, targetUserID *int) error {
-	_, err := tx.Exec(ctx, "INSERT INTO transactions (user_id, amount, transaction_type, target_user_id, status) VALUES ($1, $2, $3, $4, 'completed');",
-		userID, amount, transactionType, targetUserID)
+func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, targetUserID *int) error {
+	_, err := tx.Exec(ctx, "INSERT INTO transactions (user_id, amount, target_user_id, status) VALUES ($1, $2, $3, 'completed');",
+		userID, amount, targetUserID)
 	if err != nil {
 		tx.Rollback(ctx)
 		return errors.Wrap(err, "failed to insert transaction")
@@ -20,11 +20,10 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx pgx.Tx
 
 	transactionKey := fmt.Sprintf("transaction:%d:%d", userID, time.Now().Unix())
 	transactionData := map[string]interface{}{
-		"user_id":          userID,
-		"amount":           amount,
-		"transaction_type": transactionType,
-		"target_user_id":   targetUserID,
-		"status":           "completed",
+		"user_id":        userID,
+		"amount":         amount,
+		"target_user_id": targetUserID,
+		"status":         "completed",
 	}
 
 	err = r.redisClient.SetObject(ctx, transactionKey, transactionData, 24*time.Hour)
@@ -47,7 +46,7 @@ func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID 
 
 	rows, err := r.db.DB().QueryContext(ctx, db.Query{
 		Name:     "get_last_transactions",
-		QueryRaw: "SELECT id, amount, transaction_type, target_user_id, status, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10",
+		QueryRaw: "SELECT id, amount, target_user_id, status, created_at FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10",
 	}, userID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to query transactions")

@@ -9,7 +9,7 @@ import (
 )
 
 type Transaction interface {
-	CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, transactionType string, targetUserID *int) error
+	CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, targetUserID *int) error
 	GetLastTransactions(ctx context.Context, userID int) ([]models.Transaction, error)
 }
 
