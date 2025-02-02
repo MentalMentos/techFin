@@ -20,9 +20,9 @@ type ServiceImpl struct {
 	logger    logger.Logger
 }
 
-func NewService(transrepo transaction.TransactionRepository, balRepo balance.BalanceRepository, tx db.TxManager, logger logger.Logger) *ServiceImpl {
+func NewService(transRepo transaction.TransactionRepository, balRepo balance.BalanceRepository, tx db.TxManager, logger logger.Logger) *ServiceImpl {
 	return &ServiceImpl{
-		transRepo: transrepo,
+		transRepo: transRepo,
 		balRepo:   balRepo,
 		txManager: tx,
 		logger:    logger,

@@ -28,7 +28,7 @@ services:
   migrations:
     build:
       context: .
-      dockerfile: migration.Dockerfile
+      dockerfile: Dockerfile
     depends_on:
       pg:
         condition: service_healthy
@@ -37,7 +37,7 @@ services:
       - PG_USER=${PG_USER}
       - PG_PASSWORD=${PG_PASSWORD}
       - MIGRATION_DIR=${MIGRATION_DIR}
-    restart: "on-failure"
+    restart: always
 
   app:
     build: .
