@@ -7,7 +7,8 @@ import (
 	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/MentalMentos/techFin/internal/clients/redis/go_redis"
 	"github.com/MentalMentos/techFin/internal/handlers"
-	"github.com/MentalMentos/techFin/internal/repository"
+	"github.com/MentalMentos/techFin/internal/repository/balance"
+	transaction2 "github.com/MentalMentos/techFin/internal/repository/transaction"
 	"github.com/MentalMentos/techFin/internal/router"
 	"github.com/MentalMentos/techFin/internal/service"
 	"github.com/MentalMentos/techFin/pkg/helpers"
@@ -57,10 +58,9 @@ func main() {
 	}
 
 	// Инициализация репозитория для работы с данными
-	bankRepository := repository.NewRepository(pgClient, redisClient, myLogger)
 
 	// Инициализация сервиса, который использует репозиторий и менеджер транзакций
-	bankService := service.NewService(bankRepository, txManager, myLogger)
+	bankService := service.NewService(transaction2.NewTransactionRepository(pgClient, redisClient, myLogger), balance.NewBalanceRepository(pgClient, redisClient, myLogger), txManager, myLogger)
 
 	// Инициализация логгера для обработчиков
 	zap, err := zap.NewProduction()

@@ -15,15 +15,11 @@ type Transaction interface {
 }
 
 type TransactionRepository struct {
-	db          db.Client
-	redisClient redis.IRedis
-	logger      logger.Logger
+	Transaction
 }
 
-func NewTransactionRepository(db db.Client, redisClient redis.IRedis, logger logger.Logger) *TransactionRepository {
+func NewTransactionRepository(db db.Client, redis redis.IRedis, logger logger.Logger) *TransactionRepository {
 	return &TransactionRepository{
-		db:          db,
-		redisClient: redisClient,
-		logger:      logger,
+		NewTransactionRepo(db, redis, logger),
 	}
 }

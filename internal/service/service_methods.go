@@ -2,17 +2,37 @@ package service
 
 import (
 	"context"
+	"github.com/MentalMentos/techFin/internal/clients/db"
 	"github.com/MentalMentos/techFin/internal/models"
+	"github.com/MentalMentos/techFin/internal/repository/balance"
+	"github.com/MentalMentos/techFin/internal/repository/transaction"
 	"github.com/MentalMentos/techFin/pkg/helpers"
+	"github.com/MentalMentos/techFin/pkg/logger"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 	"log"
 )
 
+type ServiceImpl struct {
+	transRepo *transaction.TransactionRepository
+	balRepo   *balance.BalanceRepository
+	txManager db.TxManager
+	logger    logger.Logger
+}
+
+func NewService(transrepo *transaction.TransactionRepository, balRepo *balance.BalanceRepository, tx db.TxManager, logger logger.Logger) *ServiceImpl {
+	return &ServiceImpl{
+		transRepo: transrepo,
+		balRepo:   balRepo,
+		txManager: tx,
+		logger:    logger,
+	}
+}
+
 // GetBalance возвращает баланс пользователя, используя репозиторий
 func (s *ServiceImpl) GetBalance(ctx context.Context, userID int) (float64, error) {
 	// Получаем баланс через репозиторий
-	balance, err := s.repo.BalanceRepository().GetBalance(ctx, userID)
+	balance, err := s.balRepo.GetBalance(ctx, userID)
 	if err != nil {
 		// Логируем ошибку при получении баланса
 		s.logger.Info(helpers.ServicePrefix, helpers.ServiceGetBalanceError)
@@ -31,7 +51,7 @@ func (s *ServiceImpl) UpdateBalance(ctx context.Context, userID int, amount floa
 	err := s.txManager.RepeatableRead(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var err error
 		// Обновляем баланс через репозиторий
-		updatedBalance, err = s.repo.BalanceRepository().UpdateBalance(txCtx, tx, userID, amount)
+		updatedBalance, err = s.balRepo.UpdateBalance(txCtx, tx, userID, amount)
 		if err != nil {
 			// Логируем ошибку при обновлении баланса
 			s.logger.Info(helpers.ServicePrefix, helpers.ServiceUpdateBalanceError)
@@ -51,7 +71,7 @@ func (s *ServiceImpl) UpdateBalance(ctx context.Context, userID int, amount floa
 // Transfer выполняет перевод средств между двумя пользователями в рамках транзакции
 func (s *ServiceImpl) Transfer(ctx context.Context, fromUserID, toUserID int, amount float64) error {
 	// Получаем баланс отправителя
-	balanceFromUser, err := s.repo.BalanceRepository().GetBalance(ctx, fromUserID)
+	balanceFromUser, err := s.balRepo.GetBalance(ctx, fromUserID)
 	if err != nil {
 		// Логируем ошибку при получении баланса отправителя
 		s.logger.Info(helpers.ServicePrefix, helpers.ServiceGetBalanceError)
@@ -67,7 +87,7 @@ func (s *ServiceImpl) Transfer(ctx context.Context, fromUserID, toUserID int, am
 	// Осуществляем перевод в рамках транзакции
 	return s.txManager.Serializable(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		// Обновляем баланс отправителя
-		newBalanceFromUser, err := s.repo.BalanceRepository().UpdateBalance(txCtx, tx, fromUserID, -amount)
+		newBalanceFromUser, err := s.balRepo.UpdateBalance(txCtx, tx, fromUserID, -amount)
 		if err != nil {
 			// Логируем ошибку при обновлении баланса отправителя
 			s.logger.Info(helpers.ServicePrefix, helpers.ServiceTransferError)
@@ -82,21 +102,21 @@ func (s *ServiceImpl) Transfer(ctx context.Context, fromUserID, toUserID int, am
 		}
 
 		// Обновляем баланс получателя
-		if _, err := s.repo.BalanceRepository().UpdateBalance(txCtx, tx, toUserID, amount); err != nil {
+		if _, err := s.balRepo.UpdateBalance(txCtx, tx, toUserID, amount); err != nil {
 			// Логируем ошибку при обновлении баланса получателя
 			s.logger.Info(helpers.ServicePrefix, helpers.ServiceTransferError)
 			return err
 		}
 
 		// Создаем транзакцию для отправителя
-		if err := s.repo.TransactionRepository().CreateTransaction(txCtx, tx, fromUserID, -amount, &toUserID); err != nil {
+		if err := s.transRepo.CreateTransaction(txCtx, tx, fromUserID, -amount, &toUserID); err != nil {
 			// Логируем ошибку при создании транзакции для отправителя
 			s.logger.Info(helpers.ServicePrefix, helpers.ServiceTransactionError)
 			return err
 		}
 
 		// Создаем транзакцию для получателя
-		if err := s.repo.TransactionRepository().CreateTransaction(txCtx, tx, toUserID, amount, &fromUserID); err != nil {
+		if err := s.transRepo.CreateTransaction(txCtx, tx, toUserID, amount, &fromUserID); err != nil {
 			// Логируем ошибку при создании транзакции для получателя
 			s.logger.Info(helpers.ServicePrefix, helpers.ServiceTransactionError)
 			return err
@@ -114,7 +134,7 @@ func (s *ServiceImpl) GetLastTransactions(ctx context.Context, userID int) ([]mo
 	err := s.txManager.ReadCommitted(ctx, func(txCtx context.Context, tx pgx.Tx) error {
 		var err error
 		// Получаем транзакции через репозиторий
-		transactions, err = s.repo.TransactionRepository().GetLastTransactions(txCtx, userID)
+		transactions, err = s.transRepo.GetLastTransactions(txCtx, userID)
 		if err != nil {
 			// Логируем ошибку при получении транзакций
 			s.logger.Info(helpers.ServicePrefix, helpers.ServiceTransactionError)

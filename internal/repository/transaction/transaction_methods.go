@@ -4,22 +4,37 @@ import (
 	"context"
 	"fmt"
 	"github.com/MentalMentos/techFin/internal/clients/db"
+	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/MentalMentos/techFin/internal/models"
 	"github.com/MentalMentos/techFin/pkg/helpers"
+	"github.com/MentalMentos/techFin/pkg/logger"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 	"time"
 )
 
+type TransactionRepo struct {
+	db          db.Client
+	redisClient redis.IRedis
+	logger      logger.Logger
+}
+
+func NewTransactionRepo(db db.Client, redisClient redis.IRedis, logger logger.Logger) *TransactionRepo {
+	return &TransactionRepo{
+		db:          db,
+		redisClient: redisClient,
+		logger:      logger,
+	}
+}
+
 // CreateTransaction создает новую транзакцию и кэширует её в Redis
-func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, targetUserID *int) error {
+func (r *TransactionRepo) CreateTransaction(ctx context.Context, tx pgx.Tx, userID int, amount float64, targetUserID *int) error {
 	// Вставка новой транзакции в базу данных
 	_, err := tx.Exec(ctx, "INSERT INTO transactions (user_id, amount, target_user_id, status) VALUES ($1, $2, $3, 'completed');",
 		userID, amount, targetUserID)
 	if err != nil {
 		// Логирование ошибки при создании транзакции в базе данных и откат транзакции
 		r.logger.Info(helpers.RepoPrefix, helpers.RepoCreateTransactionError)
-		tx.Rollback(ctx)
 		return errors.Wrap(err, helpers.RepoCreateTransactionError)
 	}
 
@@ -46,7 +61,7 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, tx pgx.Tx
 }
 
 // GetLastTransactions извлекает последние транзакции пользователя, сначала проверяя кэш
-func (r *TransactionRepository) GetLastTransactions(ctx context.Context, userID int) ([]models.Transaction, error) {
+func (r *TransactionRepo) GetLastTransactions(ctx context.Context, userID int) ([]models.Transaction, error) {
 	var transactions []models.Transaction
 
 	// Создание ключа для последней транзакции в Redis

@@ -14,15 +14,11 @@ type Balance interface {
 }
 
 type BalanceRepository struct {
-	db          db.Client
-	redisClient redis.IRedis
-	logger      logger.Logger
+	Balance
 }
 
-func New(db db.Client, redisClient redis.IRedis, logger logger.Logger) *BalanceRepository {
+func NewBalanceRepository(db db.Client, redis redis.IRedis, logger logger.Logger) *BalanceRepository {
 	return &BalanceRepository{
-		db:          db,
-		redisClient: redisClient,
-		logger:      logger,
+		NewBalanceRepo(db, redis, logger),
 	}
 }

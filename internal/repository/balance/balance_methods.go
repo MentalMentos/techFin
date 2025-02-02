@@ -4,15 +4,31 @@ import (
 	"context"
 	"fmt"
 	"github.com/MentalMentos/techFin/internal/clients/db"
+	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/MentalMentos/techFin/pkg/helpers"
+	"github.com/MentalMentos/techFin/pkg/logger"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 	"strconv"
 	"time"
 )
 
+type BalanceRepo struct {
+	db          db.Client
+	redisClient redis.IRedis
+	logger      logger.Logger
+}
+
+func NewBalanceRepo(db db.Client, redisClient redis.IRedis, logger logger.Logger) *BalanceRepo {
+	return &BalanceRepo{
+		db:          db,
+		redisClient: redisClient,
+		logger:      logger,
+	}
+}
+
 // GetBalance извлекает баланс пользователя, сначала проверяя Redis, а затем базу данных
-func (r *BalanceRepository) GetBalance(ctx context.Context, userID int) (float64, error) {
+func (r *BalanceRepo) GetBalance(ctx context.Context, userID int) (float64, error) {
 	// Проверка наличия баланса в Redis
 	balanceStr, err := r.redisClient.Get(ctx, fmt.Sprintf("balance:%d", userID))
 	if err == nil {
@@ -52,7 +68,7 @@ func (r *BalanceRepository) GetBalance(ctx context.Context, userID int) (float64
 }
 
 // UpdateBalance обновляет баланс пользователя и кэширует новое значение
-func (r *BalanceRepository) UpdateBalance(ctx context.Context, tx pgx.Tx, userID int, amount float64) (float64, error) {
+func (r *BalanceRepo) UpdateBalance(ctx context.Context, tx pgx.Tx, userID int, amount float64) (float64, error) {
 	var updatedBalance float64
 
 	// Обновление баланса в базе данных
