@@ -13,12 +13,12 @@ import (
 )
 
 type Handler struct {
-	service *service.ServiceImpl // Сервис для обработки логики
+	service *service.BankService // Сервис для обработки логики
 	logger  *zap.Logger          // Логгер для логирования запросов и ошибок
 }
 
 // NewHandler создает новый обработчик API
-func NewHandler(service *service.ServiceImpl, logger *zap.Logger) *Handler {
+func NewHandler(service *service.BankService, logger *zap.Logger) *Handler {
 	return &Handler{service: service, logger: logger}
 }
 

@@ -6,12 +6,12 @@ import (
 	"github.com/MentalMentos/techFin/internal/clients/db/pg/transaction"
 	"github.com/MentalMentos/techFin/internal/clients/redis"
 	"github.com/MentalMentos/techFin/internal/clients/redis/go_redis"
+	"github.com/MentalMentos/techFin/internal/config"
 	"github.com/MentalMentos/techFin/internal/handlers"
 	"github.com/MentalMentos/techFin/internal/router"
 	"github.com/MentalMentos/techFin/internal/service"
 	"github.com/MentalMentos/techFin/pkg/helpers"
 	zaplogger "github.com/MentalMentos/techFin/pkg/logger/zap"
-	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"log"
 )
@@ -24,7 +24,7 @@ func main() {
 	myLogger := zaplogger.New()
 
 	// Загрузка переменных окружения из .env файла
-	err := godotenv.Load()
+	err := config.Load()
 	if err != nil {
 		// В случае ошибки загрузки конфигурации завершение работы с фатальным логом
 		myLogger.Fatal(helpers.AppPrefix, "Failed to load env paths")

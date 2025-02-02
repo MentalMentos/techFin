@@ -5,8 +5,6 @@ services:
       - POSTGRES_DB=${PG_DATABASE_NAME}
       - POSTGRES_USER=${PG_USER}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     ports:
       - "${PG_PORT}:5432"
     volumes:
@@ -20,12 +18,42 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  migrations:
+    build:
+      context: .
+      dockerfile: migration.Dockerfile
+    depends_on:
+      pg:
+        condition: service_healthy
+    environment:
+      - PG_DATABASE_NAME=${PG_DATABASE_NAME}
+      - PG_USER=${PG_USER}
+      - PG_PASSWORD=${PG_PASSWORD}
+      - MIGRATION_DIR=${MIGRATION_DIR}
+    restart: "on-failure"
+
+  app:
+    build: .
+    environment:
+      - PG_DSN=${PG_DSN}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - APP_PORT=${APP_PORT}
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT}:8080"
+    command: ["go", "run", "cmd/app/main.go"]
 
 volumes:
   postgres_data:
