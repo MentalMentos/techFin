@@ -11,7 +11,7 @@ func SetupRouter(handler *handlers.Handler) *gin.Engine {
 	// Группа API v1
 	api := r.Group("/api")
 	{
-		api.GET("/balance", handler.GetBalanceHandler)            // Получение баланса
+		//api.GET("/balance", handler.GetBalanceHandler)            // Получение баланса
 		api.POST("/balance-update", handler.UpdateBalanceHandler) // Пополнение баланса
 
 		api.POST("/transfer", handler.TransferHandler)               // Перевод денег
