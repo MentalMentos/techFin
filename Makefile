@@ -4,9 +4,10 @@ LOCAL_BIN:=$(CURDIR)/bin
 LOCAL_MIGRATION_DIR=$(MIGRATION_DIR)
 LOCAL_MIGRATION_DSN="host=localhost port=$(PG_PORT) dbname=$(PG_DATABASE_NAME) user=$(PG_USER) password=$(PG_PASSWORD) sslmode=disable"
 
-# Поднимаем контейнеры
+# Поднимаем контейнеры и запускаем приложение
 up:
-	docker-compose up -d
+	docker-compose up --build -d
+	go run cmd/app/main.go
 
 # Останавливаем контейнеры
 down:

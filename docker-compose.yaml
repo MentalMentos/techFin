@@ -37,7 +37,7 @@ services:
       - PG_USER=${PG_USER}
       - PG_PASSWORD=${PG_PASSWORD}
       - MIGRATION_DIR=${MIGRATION_DIR}
-    restart: always
+    restart: "no"
 
   app:
     build: .
@@ -45,7 +45,7 @@ services:
       - PG_DSN=${PG_DSN}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
-      - APP_PORT=${APP_PORT}
+      - APP_PORT=8080
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -54,6 +54,9 @@ services:
     ports:
       - "${APP_PORT}:8080"
     command: ["go", "run", "cmd/app/main.go"]
+networks:
+  app_network:
+    driver: bridge
 
 volumes:
   postgres_data:

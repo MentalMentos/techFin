@@ -127,9 +127,8 @@ func (h *Handler) TransferHandler(c *gin.Context) {
 
 // GetLastTransactionsHandler - обработчик для получения последних 10 транзакций пользователя
 func (h *Handler) GetLastTransactionsHandler(c *gin.Context) {
-	// Получаем user_id из URL параметра
-	userID, err := strconv.Atoi(c.Param("user_id"))
-	if err != nil {
+	var req request.GetTransactionsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		// Логируем ошибку при некорректном user_id
 		h.logger.Warn(helpers.HandlerPrefix+"Invalid user_id", zap.Error(err))
 		c.JSON(http.StatusBadRequest, response.StandardResponse{
@@ -140,10 +139,10 @@ func (h *Handler) GetLastTransactionsHandler(c *gin.Context) {
 	}
 
 	// Получаем последние транзакции через сервис
-	transactions, err := h.service.GetLastTransactions(c.Request.Context(), userID)
+	transactions, err := h.service.GetLastTransactions(c.Request.Context(), req.UserID)
 	if err != nil {
 		// Логируем ошибку при получении транзакций
-		h.logger.Error(helpers.HandlerPrefix+"Failed to get last transactions", zap.Int("user_id", userID), zap.Error(err))
+		h.logger.Error(helpers.HandlerPrefix+"Failed to get last transactions", zap.Int("user_id", req.UserID), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, response.StandardResponse{
 			Status:  "error",
 			Message: err.Error(),
@@ -152,7 +151,7 @@ func (h *Handler) GetLastTransactionsHandler(c *gin.Context) {
 	}
 
 	// Логируем успешное получение транзакций
-	h.logger.Info(helpers.HandlerPrefix+"Transactions retrieved", zap.Int("user_id", userID), zap.Int("count", len(transactions)))
+	h.logger.Info(helpers.HandlerPrefix+"Transactions retrieved", zap.Int("user_id", req.UserID), zap.Int("count", len(transactions)))
 	c.JSON(http.StatusOK, response.StandardResponse{
 		Status:  "success",
 		Message: "transactions retrieved",
