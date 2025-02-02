@@ -18,8 +18,8 @@ type TransactionRepository struct {
 	Transaction
 }
 
-func NewTransactionRepository(db db.Client, redis redis.IRedis, logger logger.Logger) *TransactionRepository {
-	return &TransactionRepository{
+func NewTransactionRepository(db db.Client, redis redis.IRedis, logger logger.Logger) TransactionRepository {
+	return TransactionRepository{
 		NewTransactionRepo(db, redis, logger),
 	}
 }

@@ -17,8 +17,8 @@ type BalanceRepository struct {
 	Balance
 }
 
-func NewBalanceRepository(db db.Client, redis redis.IRedis, logger logger.Logger) *BalanceRepository {
-	return &BalanceRepository{
+func NewBalanceRepository(db db.Client, redis redis.IRedis, logger logger.Logger) BalanceRepository {
+	return BalanceRepository{
 		NewBalanceRepo(db, redis, logger),
 	}
 }

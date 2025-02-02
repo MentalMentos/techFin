@@ -14,13 +14,13 @@ import (
 )
 
 type ServiceImpl struct {
-	transRepo *transaction.TransactionRepository
-	balRepo   *balance.BalanceRepository
+	transRepo transaction.TransactionRepository
+	balRepo   balance.BalanceRepository
 	txManager db.TxManager
 	logger    logger.Logger
 }
 
-func NewService(transrepo *transaction.TransactionRepository, balRepo *balance.BalanceRepository, tx db.TxManager, logger logger.Logger) *ServiceImpl {
+func NewService(transrepo transaction.TransactionRepository, balRepo balance.BalanceRepository, tx db.TxManager, logger logger.Logger) *ServiceImpl {
 	return &ServiceImpl{
 		transRepo: transrepo,
 		balRepo:   balRepo,
